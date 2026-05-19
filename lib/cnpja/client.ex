@@ -1,5 +1,5 @@
 defmodule Cnpja.Client do
-  @moduledoc "Cliente HTTP interno. Usa Req com autenticação por API key."
+  @moduledoc false
 
   @spec get(String.t(), keyword(), keyword()) ::
           {:ok, map() | binary()} | {:error, Cnpja.Error.t()}

@@ -1,5 +1,5 @@
 defmodule Cnpja.Label do
-  @moduledoc "Rótulo genérico com id e texto (natureza jurídica, porte, situação, etc.)."
+  @moduledoc "Generic label with an integer id and a display text (legal nature, company size, status, etc.)."
 
   @enforce_keys [:id, :text]
   defstruct [:id, :text]

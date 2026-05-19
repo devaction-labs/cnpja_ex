@@ -1,5 +1,5 @@
 defmodule Cnpja.StateRegistration do
-  @moduledoc "Inscrição estadual de um estabelecimento."
+  @moduledoc "State tax registration (Inscrição Estadual) of an establishment."
 
   @enforce_keys [:number, :state, :enabled]
   defstruct [:number, :state, :enabled, :status_date, :status, :type]

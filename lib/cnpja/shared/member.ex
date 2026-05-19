@@ -1,5 +1,5 @@
 defmodule Cnpja.Member do
-  @moduledoc "Sócio ou administrador de uma empresa."
+  @moduledoc "Company member or administrator."
 
   @enforce_keys [:since, :person, :role]
   defstruct [:since, :person, :role, :agent]

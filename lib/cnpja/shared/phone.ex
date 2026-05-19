@@ -1,5 +1,5 @@
 defmodule Cnpja.Phone do
-  @moduledoc "Telefone de um estabelecimento."
+  @moduledoc "Phone number of an establishment."
 
   @enforce_keys [:area, :number]
   defstruct [:type, :area, :number]

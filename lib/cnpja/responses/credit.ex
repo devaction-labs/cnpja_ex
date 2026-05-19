@@ -1,5 +1,5 @@
 defmodule Cnpja.Credit do
-  @moduledoc "Saldo de créditos da conta."
+  @moduledoc "Account credit balance."
 
   @enforce_keys [:perpetual, :transient]
   defstruct [:perpetual, :transient]

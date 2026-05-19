@@ -1,5 +1,5 @@
 defmodule Cnpja.Config do
-  @moduledoc "Leitura da configuração do SDK."
+  @moduledoc false
 
   @base_url "https://api.cnpja.com"
 

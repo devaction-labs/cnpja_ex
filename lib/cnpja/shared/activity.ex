@@ -1,5 +1,5 @@
 defmodule Cnpja.Activity do
-  @moduledoc "Atividade econômica (CNAE)."
+  @moduledoc "Economic activity (CNAE code)."
 
   @enforce_keys [:id, :text]
   defstruct [:id, :text]

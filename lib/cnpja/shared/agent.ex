@@ -1,5 +1,5 @@
 defmodule Cnpja.Agent do
-  @moduledoc "Representante legal de um sócio."
+  @moduledoc "Legal representative of a company member."
 
   defstruct [:person, :role]
 

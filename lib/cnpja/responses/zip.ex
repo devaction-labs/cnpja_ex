@@ -1,5 +1,5 @@
 defmodule Cnpja.Zip do
-  @moduledoc "Dados de um Código de Endereçamento Postal (CEP)."
+  @moduledoc "Brazilian postal code (CEP) data."
 
   @enforce_keys [:code, :city, :state]
   defstruct [:updated, :municipality, :code, :street, :number, :district, :city, :state]

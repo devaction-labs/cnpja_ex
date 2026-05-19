@@ -1,5 +1,5 @@
 defmodule Cnpja.SuframaIncentive do
-  @moduledoc "Incentivo fiscal concedido pela SUFRAMA."
+  @moduledoc "Tax incentive granted by SUFRAMA."
 
   @enforce_keys [:tribute, :benefit, :purpose, :basis]
   defstruct [:tribute, :benefit, :purpose, :basis]

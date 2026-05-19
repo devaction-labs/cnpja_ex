@@ -1,5 +1,5 @@
 defmodule Cnpja.SimplesHistory do
-  @moduledoc "Período histórico do Simples Nacional ou MEI."
+  @moduledoc "Historical period of Simples Nacional or MEI enrollment."
 
   @enforce_keys [:from, :text]
   defstruct [:from, :until, :text]

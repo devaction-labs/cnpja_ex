@@ -1,5 +1,5 @@
 defmodule Cnpja.PersonRef do
-  @moduledoc "Referência a uma pessoa (sócio ou representante)."
+  @moduledoc "Reference to a person (company member or legal representative)."
 
   @enforce_keys [:id, :name, :type]
   defstruct [:id, :type, :name, :tax_id, :age, :country]

@@ -8,13 +8,13 @@ defmodule Cnpja.MixProject do
     [
       app: :cnpja_ex,
       version: @version,
-      elixir: "~> 1.15",
+      elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       aliases: aliases(),
       description:
-        "SDK Elixir para a API CNPJá — consulta CNPJ, CEP, RFB, Simples Nacional, CCC e SUFRAMA.",
+        "Elixir SDK for the CNPJá API — CNPJ, CEP, RFB, Simples Nacional, CCC and SUFRAMA lookups.",
       package: package(),
       name: "Cnpja",
       source_url: @source_url,

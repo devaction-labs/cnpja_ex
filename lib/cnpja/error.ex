@@ -1,5 +1,5 @@
 defmodule Cnpja.Error do
-  @moduledoc "Erro retornado pela API CNPJá."
+  @moduledoc "Error returned by the CNPJá API."
 
   defstruct [:status, :message, :constraints, :required, :remaining, :raw]
 
@@ -12,6 +12,7 @@ defmodule Cnpja.Error do
           raw: map()
         }
 
+  @doc false
   @spec from_response(integer(), map()) :: t()
   def from_response(400, body) do
     %__MODULE__{

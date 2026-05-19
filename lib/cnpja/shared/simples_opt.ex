@@ -1,5 +1,5 @@
 defmodule Cnpja.SimplesOpt do
-  @moduledoc "Dados de opção pelo Simples Nacional ou enquadramento no MEI."
+  @moduledoc "Simples Nacional enrollment or MEI classification data."
 
   @enforce_keys [:optant]
   defstruct [:optant, :since, :history]

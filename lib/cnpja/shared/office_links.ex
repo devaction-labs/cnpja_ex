@@ -1,5 +1,5 @@
 defmodule Cnpja.OfficeLinks do
-  @moduledoc "Links para documentos públicos do estabelecimento."
+  @moduledoc "Links to public documents of an establishment (certificates, map, street view)."
 
   defstruct [
     :rfb_certificate,

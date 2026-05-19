@@ -1,5 +1,5 @@
 defmodule Cnpja.Office do
-  @moduledoc "Estabelecimento (CNPJ com 14 dígitos)."
+  @moduledoc "Establishment identified by a full 14-digit CNPJ."
 
   @enforce_keys [:tax_id, :status, :address]
   defstruct [

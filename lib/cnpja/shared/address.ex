@@ -1,5 +1,5 @@
 defmodule Cnpja.Address do
-  @moduledoc "Endereço de um estabelecimento."
+  @moduledoc "Physical address of an establishment."
 
   @enforce_keys [:city, :state, :zip]
   defstruct [

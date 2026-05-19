@@ -1,5 +1,5 @@
 defmodule Cnpja.Simples do
-  @moduledoc "Dados do Simples Nacional e MEI de uma empresa."
+  @moduledoc "Simples Nacional and MEI enrollment data for a company."
 
   @enforce_keys [:tax_id]
   defstruct [:tax_id, :updated, :simples, :simei]

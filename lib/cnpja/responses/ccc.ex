@@ -1,5 +1,5 @@
 defmodule Cnpja.Ccc do
-  @moduledoc "Dados do Cadastro Centralizado de Contribuintes (CCC) de um estabelecimento."
+  @moduledoc "State tax registrations from the CCC (Cadastro Centralizado de Contribuintes)."
 
   @enforce_keys [:tax_id]
   defstruct [:tax_id, :updated, :name, :origin_state, :registrations]

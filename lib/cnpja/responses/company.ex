@@ -1,5 +1,5 @@
 defmodule Cnpja.Company do
-  @moduledoc "Empresa (raiz do CNPJ) com estabelecimentos, sócios e opções tributárias."
+  @moduledoc "Company (CNPJ root) with its establishments, members, and tax enrollment data."
 
   @enforce_keys [:id, :name]
   defstruct [:id, :name, :equity, :nature, :size, :members, :offices, :simples, :simei]

@@ -1,5 +1,5 @@
 defmodule Cnpja.PersonSearch do
-  @moduledoc "Resultado paginado de busca de pessoas."
+  @moduledoc "Paginated result of a person search."
 
   @enforce_keys [:count, :records]
   defstruct [:next, :limit, :count, :records]

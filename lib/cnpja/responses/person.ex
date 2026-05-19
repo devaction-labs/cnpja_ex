@@ -1,5 +1,5 @@
 defmodule Cnpja.Person do
-  @moduledoc "Pessoa física ou jurídica com seus vínculos societários."
+  @moduledoc "Individual or legal entity with their company memberships."
 
   @enforce_keys [:id, :name, :type]
   defstruct [:id, :type, :name, :tax_id, :age, :country, :membership]

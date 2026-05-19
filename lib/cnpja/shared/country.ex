@@ -1,5 +1,5 @@
 defmodule Cnpja.Country do
-  @moduledoc "País conforme tabela M49."
+  @moduledoc "Country per the M49 standard table."
 
   @enforce_keys [:id, :name]
   defstruct [:id, :name]

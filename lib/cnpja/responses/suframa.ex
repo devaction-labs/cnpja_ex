@@ -1,5 +1,5 @@
 defmodule Cnpja.Suframa do
-  @moduledoc "Dados de inscrição na SUFRAMA de um estabelecimento."
+  @moduledoc "SUFRAMA enrollment data for an establishment."
 
   @enforce_keys [:tax_id]
   defstruct [:tax_id, :number, :name, :approved, :status, :incentives]

@@ -1,5 +1,5 @@
 defmodule Cnpja.OfficeSearch do
-  @moduledoc "Resultado paginado de busca de estabelecimentos."
+  @moduledoc "Paginated result of an establishment search."
 
   @enforce_keys [:count, :records]
   defstruct [:next, :limit, :count, :records]

@@ -1,5 +1,5 @@
 defmodule Cnpja.Rfb do
-  @moduledoc "Dados de estabelecimento diretamente da Receita Federal, incluindo quadro societário."
+  @moduledoc "Establishment data sourced directly from the Receita Federal, including the membership board."
 
   @enforce_keys [:tax_id, :status, :address]
   defstruct [

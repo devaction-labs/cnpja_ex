@@ -1,5 +1,5 @@
 defmodule Cnpja.Email do
-  @moduledoc "E-mail de um estabelecimento."
+  @moduledoc "Email address of an establishment."
 
   @enforce_keys [:address, :domain]
   defstruct [:ownership, :address, :domain]
