@@ -35,6 +35,35 @@ defmodule Cnpja.SharedTest do
     test "returns nil when given nil" do
       assert nil == Cnpja.Country.from_map_nullable(nil)
     end
+
+    test "parses non-nil country via from_map_nullable" do
+      assert %Cnpja.Country{id: 76, name: "Brasil"} =
+               Cnpja.Country.from_map_nullable(%{"id" => 76, "name" => "Brasil"})
+    end
+  end
+
+  describe "Cnpja.SizeLabel.from_map/1 and from_map_nullable/1" do
+    test "parses size label map" do
+      assert %Cnpja.SizeLabel{id: 1, acronym: "ME", text: "Micro Empresa"} =
+               Cnpja.SizeLabel.from_map(%{
+                 "id" => 1,
+                 "acronym" => "ME",
+                 "text" => "Micro Empresa"
+               })
+    end
+
+    test "returns nil when given nil" do
+      assert nil == Cnpja.SizeLabel.from_map_nullable(nil)
+    end
+
+    test "parses non-nil size via from_map_nullable" do
+      assert %Cnpja.SizeLabel{acronym: "EPP"} =
+               Cnpja.SizeLabel.from_map_nullable(%{
+                 "id" => 3,
+                 "acronym" => "EPP",
+                 "text" => "Empresa de Pequeno Porte"
+               })
+    end
   end
 
   describe "Cnpja.Agent.from_map/1 and from_map_nullable/1" do
@@ -49,6 +78,15 @@ defmodule Cnpja.SharedTest do
 
     test "returns nil when given nil" do
       assert nil == Cnpja.Agent.from_map_nullable(nil)
+    end
+
+    test "parses non-nil agent via from_map_nullable" do
+      map = %{
+        "person" => %{"id" => "p2", "type" => "NATURAL", "name" => "CICLANO"},
+        "role" => %{"id" => 65, "text" => "Representante Legal"}
+      }
+
+      assert %Cnpja.Agent{role: %Cnpja.Label{id: 65}} = Cnpja.Agent.from_map_nullable(map)
     end
   end
 
@@ -111,6 +149,35 @@ defmodule Cnpja.SharedTest do
 
       assert %Cnpja.SuframaIncentive{tribute: "IPI", benefit: "Isenção"} =
                Cnpja.SuframaIncentive.from_map(map)
+    end
+  end
+
+  describe "Cnpja.Company.from_map_nullable/1" do
+    test "returns nil when given nil" do
+      assert nil == Cnpja.Company.from_map_nullable(nil)
+    end
+
+    test "parses non-nil company via from_map_nullable" do
+      map = %{"id" => 1, "name" => "EMPRESA LTDA", "members" => [], "offices" => []}
+
+      assert %Cnpja.Company{id: 1, name: "EMPRESA LTDA"} =
+               Cnpja.Company.from_map_nullable(map)
+    end
+  end
+
+  describe "Cnpja.Office.from_map_nullable/1" do
+    test "returns nil when given nil" do
+      assert nil == Cnpja.Office.from_map_nullable(nil)
+    end
+
+    test "parses non-nil office via from_map_nullable" do
+      map = %{
+        "taxId" => "37335118000180",
+        "status" => %{"id" => 2, "text" => "Ativa"},
+        "address" => %{"city" => "São Paulo", "state" => "SP", "zip" => "01310100"}
+      }
+
+      assert %Cnpja.Office{tax_id: "37335118000180"} = Cnpja.Office.from_map_nullable(map)
     end
   end
 

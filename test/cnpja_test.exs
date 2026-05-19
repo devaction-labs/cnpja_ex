@@ -117,6 +117,22 @@ defmodule CnpjaTest do
     end
   end
 
+  describe "Client error handling" do
+    test "returns status 0 on network error", %{bypass: bypass} do
+      Bypass.down(bypass)
+
+      assert {:error, %Cnpja.Error{status: 0}} =
+               Cnpja.get_credit(base_url: base_url(bypass))
+    end
+
+    test "parses plain-text error body", %{bypass: bypass} do
+      stub_text(bypass, "GET", "/credit", 500, "Internal Server Error")
+
+      assert {:error, %Cnpja.Error{status: 500, message: "Internal Server Error"}} =
+               Cnpja.get_credit(base_url: base_url(bypass))
+    end
+  end
+
   describe "get_zip/2" do
     test "returns zip struct on success", %{bypass: bypass} do
       stub(bypass, "GET", "/zip/01310100", 200, %{
