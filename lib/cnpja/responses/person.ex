@@ -11,9 +11,10 @@ defmodule Cnpja.Person do
           tax_id: String.t() | nil,
           age: String.t() | nil,
           country: Cnpja.Country.t() | nil,
-          membership: [map()]
+          membership: [Cnpja.PersonMembership.t()]
         }
 
+  @doc false
   @spec from_map(map()) :: t()
   def from_map(map) do
     %__MODULE__{
@@ -23,7 +24,7 @@ defmodule Cnpja.Person do
       tax_id: map["taxId"],
       age: map["age"],
       country: Cnpja.Country.from_map_nullable(map["country"]),
-      membership: map["membership"] || []
+      membership: Enum.map(map["membership"] || [], &Cnpja.PersonMembership.from_map/1)
     }
   end
 end

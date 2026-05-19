@@ -1,19 +1,8 @@
-defmodule Cnpja.Company do
-  @moduledoc "Company (CNPJ root) with its establishments, members, and tax enrollment data."
+defmodule Cnpja.CompanyRef do
+  @moduledoc "Lightweight company reference embedded inside an establishment — excludes the offices list to avoid circular data."
 
   @enforce_keys [:id, :name]
-  defstruct [
-    :id,
-    :name,
-    :equity,
-    :nature,
-    :size,
-    :jurisdiction,
-    :members,
-    :offices,
-    :simples,
-    :simei
-  ]
+  defstruct [:id, :name, :equity, :nature, :size, :jurisdiction, :members, :simples, :simei]
 
   @type t :: %__MODULE__{
           id: integer(),
@@ -23,7 +12,6 @@ defmodule Cnpja.Company do
           size: Cnpja.SizeLabel.t() | nil,
           jurisdiction: String.t() | nil,
           members: [Cnpja.Member.t()],
-          offices: [Cnpja.Office.t()],
           simples: Cnpja.SimplesOpt.t() | nil,
           simei: Cnpja.SimplesOpt.t() | nil
         }
@@ -39,7 +27,6 @@ defmodule Cnpja.Company do
       size: Cnpja.SizeLabel.from_map_nullable(map["size"]),
       jurisdiction: map["jurisdiction"],
       members: Enum.map(map["members"] || [], &Cnpja.Member.from_map/1),
-      offices: Enum.map(map["offices"] || [], &Cnpja.Office.from_map/1),
       simples: Cnpja.SimplesOpt.from_map_nullable(map["simples"]),
       simei: Cnpja.SimplesOpt.from_map_nullable(map["simei"])
     }

@@ -40,7 +40,7 @@ defmodule Cnpja.Address do
       details: map["details"],
       city: map["city"],
       state: map["state"],
-      zip: map["zip"],
+      zip: map["zip"] || map["code"],
       latitude: map["latitude"],
       longitude: map["longitude"],
       country: Cnpja.Country.from_map_nullable(map["country"])

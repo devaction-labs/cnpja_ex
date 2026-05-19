@@ -31,9 +31,36 @@ defmodule Cnpja do
   @camel_map %{
     simples_history: "simplesHistory",
     registrations_source: "registrationsSource",
-    main_activity: "mainActivity",
     max_age: "maxAge",
-    max_stale: "maxStale"
+    max_stale: "maxStale",
+    history: "history",
+    fov: "fov",
+    pages: "pages",
+    alias_in: "aliasIn",
+    alias_nin: "aliasNin",
+    company_name_in: "companyNameIn",
+    company_name_nin: "companyNameNin",
+    legal_nature_in: "legalNatureIn",
+    legal_nature_nin: "legalNatureNin",
+    equity_gte: "equityGte",
+    equity_lte: "equityLte",
+    size_in: "sizeIn",
+    simples_optant: "simplesOptant",
+    simei_optant: "simeiOptant",
+    status_in: "statusIn",
+    municipality_in: "municipalityIn",
+    state_in: "stateIn",
+    zip_in: "zipIn",
+    main_activity_in: "mainActivityIn",
+    side_activity_in: "sideActivityIn",
+    has_phone: "hasPhone",
+    has_email: "hasEmail",
+    type_in: "typeIn",
+    name_in: "nameIn",
+    name_nin: "nameNin",
+    tax_id_in: "taxIdIn",
+    age_in: "ageIn",
+    country_in: "countryIn"
   }
 
   @doc """
@@ -101,6 +128,14 @@ defmodule Cnpja do
 
   @doc """
   Returns the map image of the establishment location (PNG binary).
+
+  ## Options
+
+  - `:width` — image width in pixels
+  - `:height` — image height in pixels
+  - `:zoom` — zoom level
+  - `:scale` — scale factor
+  - `:type` — map type
   """
   @spec get_office_map(String.t(), keyword()) :: {:ok, binary()} | {:error, Cnpja.Error.t()}
   def get_office_map(tax_id, opts \\ []) do
@@ -109,6 +144,12 @@ defmodule Cnpja do
 
   @doc """
   Returns the Street View image of the establishment (JPEG binary).
+
+  ## Options
+
+  - `:width` — image width in pixels
+  - `:height` — image height in pixels
+  - `:fov` — field of view angle
   """
   @spec get_office_street_view(String.t(), keyword()) ::
           {:ok, binary()} | {:error, Cnpja.Error.t()}
@@ -119,13 +160,22 @@ defmodule Cnpja do
   @doc """
   Searches establishments with filters.
 
-  ## Common options
+  ## Options
 
-  - `:q` — search by company name
-  - `:state` — filter by state code
-  - `:main_activity` — filter by primary CNAE
+  - `:token` — pagination cursor (mutually exclusive with all filters)
   - `:limit` — results per page
-  - `:next` — pagination cursor
+  - `:alias_in` / `:alias_nin` — include/exclude trade name terms
+  - `:company_name_in` / `:company_name_nin` — include/exclude company name terms
+  - `:legal_nature_in` / `:legal_nature_nin` — legal nature codes
+  - `:equity_gte` / `:equity_lte` — share capital range
+  - `:size_in` — company size IDs (`1`=ME, `3`=EPP, `5`=Other)
+  - `:simples_optant` — enrolled in Simples Nacional (`true`/`false`)
+  - `:simei_optant` — enrolled as MEI (`true`/`false`)
+  - `:head` — headquarters only
+  - `:status_in` — status codes (2=Active, 3=Suspended, 4=Unfit, 8=Closed)
+  - `:municipality_in` / `:state_in` / `:zip_in` — location filters
+  - `:main_activity_in` / `:side_activity_in` — CNAE filters
+  - `:has_phone` / `:has_email` — contact presence filters
   """
   @spec search_offices(keyword()) :: {:ok, Cnpja.OfficeSearch.t()} | {:error, Cnpja.Error.t()}
   def search_offices(opts \\ []) do
@@ -147,12 +197,15 @@ defmodule Cnpja do
   @doc """
   Searches persons with filters.
 
-  ## Common options
+  ## Options
 
-  - `:q` — search by name
-  - `:type` — `"NATURAL"` or `"LEGAL"`
+  - `:token` — pagination cursor (mutually exclusive with all filters)
   - `:limit` — results per page
-  - `:next` — pagination cursor
+  - `:type_in` — person types: `"NATURAL"`, `"LEGAL"`, `"FOREIGN"`, `"UNKNOWN"` (comma-separated)
+  - `:name_in` / `:name_nin` — include/exclude name terms
+  - `:tax_id_in` — partial CPF digits (positions 4–9, comma-separated)
+  - `:age_in` — age ranges, e.g. `"21-30,31-40"`
+  - `:country_in` — M49 country codes (comma-separated)
   """
   @spec search_persons(keyword()) :: {:ok, Cnpja.PersonSearch.t()} | {:error, Cnpja.Error.t()}
   def search_persons(opts \\ []) do
@@ -173,10 +226,14 @@ defmodule Cnpja do
 
   @doc """
   Returns the Comprovante de Inscrição e de Situação Cadastral as a PDF binary.
+
+  ## Options
+
+  - `:pages` — pages to include: `"REGISTRATION"`, `"MEMBERS"`, or both comma-separated
   """
   @spec get_rfb_certificate(String.t(), keyword()) :: {:ok, binary()} | {:error, Cnpja.Error.t()}
   def get_rfb_certificate(tax_id, opts \\ []) do
-    Client.get_binary("/rfb/#{tax_id}/certificate", [], sdk_opts(opts))
+    Client.get_binary("/rfb/#{tax_id}/certificate", build_query(opts), sdk_opts(opts))
   end
 
   @doc """
@@ -220,10 +277,14 @@ defmodule Cnpja do
 
   @doc """
   Returns the CCC fiscal regularity certificate as a PDF binary.
+
+  ## Options
+
+  - `:state` — specific state code to filter the certificate
   """
   @spec get_ccc_certificate(String.t(), keyword()) :: {:ok, binary()} | {:error, Cnpja.Error.t()}
   def get_ccc_certificate(tax_id, opts \\ []) do
-    Client.get_binary("/ccc/#{tax_id}/certificate", [], sdk_opts(opts))
+    Client.get_binary("/ccc/#{tax_id}/certificate", build_query(opts), sdk_opts(opts))
   end
 
   @doc """
