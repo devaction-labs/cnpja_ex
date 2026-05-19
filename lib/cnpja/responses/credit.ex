@@ -1,0 +1,13 @@
+defmodule Cnpja.Credit do
+  @moduledoc "Saldo de créditos da conta."
+
+  @enforce_keys [:perpetual, :transient]
+  defstruct [:perpetual, :transient]
+
+  @type t :: %__MODULE__{perpetual: integer(), transient: integer()}
+
+  @spec from_map(map()) :: t()
+  def from_map(map) do
+    %__MODULE__{perpetual: map["perpetual"], transient: map["transient"]}
+  end
+end
