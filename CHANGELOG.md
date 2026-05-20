@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.2] - 2026-05-19
+
+### Fixed
+
+- API paths corrected from plural to singular: `/offices` → `/office`, `/companies` → `/company`, `/persons` → `/person`. All previous versions returned 404 on these endpoints when called against the real CNPJá API.
+
 ## [0.1.1] - 2026-05-19
 
 ### Added

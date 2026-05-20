@@ -98,7 +98,7 @@ defmodule Cnpja do
   """
   @spec get_company(String.t(), keyword()) :: {:ok, Cnpja.Company.t()} | {:error, Cnpja.Error.t()}
   def get_company(company_id, opts \\ []) do
-    with {:ok, body} <- Client.get("/companies/#{company_id}", build_query(opts), sdk_opts(opts)) do
+    with {:ok, body} <- Client.get("/company/#{company_id}", build_query(opts), sdk_opts(opts)) do
       {:ok, Cnpja.Company.from_map(body)}
     end
   end
@@ -121,7 +121,7 @@ defmodule Cnpja do
   """
   @spec get_office(String.t(), keyword()) :: {:ok, Cnpja.Office.t()} | {:error, Cnpja.Error.t()}
   def get_office(tax_id, opts \\ []) do
-    with {:ok, body} <- Client.get("/offices/#{tax_id}", build_query(opts), sdk_opts(opts)) do
+    with {:ok, body} <- Client.get("/office/#{tax_id}", build_query(opts), sdk_opts(opts)) do
       {:ok, Cnpja.Office.from_map(body)}
     end
   end
@@ -139,7 +139,7 @@ defmodule Cnpja do
   """
   @spec get_office_map(String.t(), keyword()) :: {:ok, binary()} | {:error, Cnpja.Error.t()}
   def get_office_map(tax_id, opts \\ []) do
-    Client.get_binary("/offices/#{tax_id}/map", build_query(opts), sdk_opts(opts))
+    Client.get_binary("/office/#{tax_id}/map", build_query(opts), sdk_opts(opts))
   end
 
   @doc """
@@ -154,7 +154,7 @@ defmodule Cnpja do
   @spec get_office_street_view(String.t(), keyword()) ::
           {:ok, binary()} | {:error, Cnpja.Error.t()}
   def get_office_street_view(tax_id, opts \\ []) do
-    Client.get_binary("/offices/#{tax_id}/street", build_query(opts), sdk_opts(opts))
+    Client.get_binary("/office/#{tax_id}/street", build_query(opts), sdk_opts(opts))
   end
 
   @doc """
@@ -179,7 +179,7 @@ defmodule Cnpja do
   """
   @spec search_offices(keyword()) :: {:ok, Cnpja.OfficeSearch.t()} | {:error, Cnpja.Error.t()}
   def search_offices(opts \\ []) do
-    with {:ok, body} <- Client.get("/offices", build_query(opts), sdk_opts(opts)) do
+    with {:ok, body} <- Client.get("/office", build_query(opts), sdk_opts(opts)) do
       {:ok, Cnpja.OfficeSearch.from_map(body)}
     end
   end
@@ -189,7 +189,7 @@ defmodule Cnpja do
   """
   @spec get_person(String.t(), keyword()) :: {:ok, Cnpja.Person.t()} | {:error, Cnpja.Error.t()}
   def get_person(person_id, opts \\ []) do
-    with {:ok, body} <- Client.get("/persons/#{person_id}", [], sdk_opts(opts)) do
+    with {:ok, body} <- Client.get("/person/#{person_id}", [], sdk_opts(opts)) do
       {:ok, Cnpja.Person.from_map(body)}
     end
   end
@@ -209,7 +209,7 @@ defmodule Cnpja do
   """
   @spec search_persons(keyword()) :: {:ok, Cnpja.PersonSearch.t()} | {:error, Cnpja.Error.t()}
   def search_persons(opts \\ []) do
-    with {:ok, body} <- Client.get("/persons", build_query(opts), sdk_opts(opts)) do
+    with {:ok, body} <- Client.get("/person", build_query(opts), sdk_opts(opts)) do
       {:ok, Cnpja.PersonSearch.from_map(body)}
     end
   end

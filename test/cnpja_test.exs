@@ -156,28 +156,28 @@ defmodule CnpjaTest do
 
   describe "get_office/2" do
     test "returns office struct on success", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       assert {:ok, %Cnpja.Office{tax_id: "37335118000180", alias: "EMPRESA EXEMPLO"}} =
                Cnpja.get_office("37335118000180", base_url: base_url(bypass))
     end
 
     test "parses status label", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert %Cnpja.Label{id: 2, text: "Ativa"} = office.status
     end
 
     test "parses status_date", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert office.status_date == "2010-01-01"
     end
 
     test "parses reason as nil when absent", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert office.reason == nil
@@ -185,7 +185,7 @@ defmodule CnpjaTest do
 
     test "parses reason label when present", %{bypass: bypass} do
       fixture = Map.put(office_fixture(), "reason", %{"id" => 1, "text" => "Extinção"})
-      stub(bypass, "GET", "/offices/37335118000180", 200, fixture)
+      stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert %Cnpja.Label{id: 1, text: "Extinção"} = office.reason
@@ -197,7 +197,7 @@ defmodule CnpjaTest do
         |> Map.put("special", %{"id" => 1, "text" => "Zona Franca"})
         |> Map.put("specialDate", "2020-01-01")
 
-      stub(bypass, "GET", "/offices/37335118000180", 200, fixture)
+      stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert %Cnpja.Label{id: 1, text: "Zona Franca"} = office.special
@@ -205,21 +205,21 @@ defmodule CnpjaTest do
     end
 
     test "parses address", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert %Cnpja.Address{city: "São Paulo", state: "SP", zip: "01310100"} = office.address
     end
 
     test "parses phones list", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert [%Cnpja.Phone{area: "11", number: "999999999"}] = office.phones
     end
 
     test "parses emails list", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
 
@@ -228,14 +228,14 @@ defmodule CnpjaTest do
     end
 
     test "parses main activity with performed field", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert %Cnpja.Activity{id: 6201, performed: true} = office.main_activity
     end
 
     test "parses state registrations", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 200, office_fixture())
+      stub(bypass, "GET", "/office/37335118000180", 200, office_fixture())
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
 
@@ -251,7 +251,7 @@ defmodule CnpjaTest do
 
     test "parses embedded company_ref", %{bypass: bypass} do
       fixture = Map.put(office_fixture(), "company", company_ref_fixture())
-      stub(bypass, "GET", "/offices/37335118000180", 200, fixture)
+      stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert %Cnpja.CompanyRef{name: "EMPRESA EXEMPLO LTDA", jurisdiction: "SP"} = office.company
@@ -259,7 +259,7 @@ defmodule CnpjaTest do
 
     test "parses embedded company_ref size label with acronym", %{bypass: bypass} do
       fixture = Map.put(office_fixture(), "company", company_ref_fixture())
-      stub(bypass, "GET", "/offices/37335118000180", 200, fixture)
+      stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert %Cnpja.SizeLabel{id: 1, acronym: "ME", text: "Micro Empresa"} = office.company.size
@@ -267,14 +267,14 @@ defmodule CnpjaTest do
 
     test "parses embedded suframa", %{bypass: bypass} do
       fixture = Map.put(office_fixture(), "suframa", suframa_fixture())
-      stub(bypass, "GET", "/offices/37335118000180", 200, fixture)
+      stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert %Cnpja.Suframa{number: "10123456", approved: true, head: true} = office.suframa
     end
 
     test "returns error 400 with constraints", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/00000000000000", 400, %{
+      stub(bypass, "GET", "/office/00000000000000", 400, %{
         "message" => "Validation failed",
         "constraints" => ["taxId must be a valid CNPJ"]
       })
@@ -284,7 +284,7 @@ defmodule CnpjaTest do
     end
 
     test "returns error 429 with credit info", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/37335118000180", 429, %{
+      stub(bypass, "GET", "/office/37335118000180", 429, %{
         "message" => "Insufficient credits",
         "required" => 5,
         "remaining" => 2
@@ -295,7 +295,7 @@ defmodule CnpjaTest do
     end
 
     test "returns error on 404", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices/00000000000000", 404, %{"message" => "Not found"})
+      stub(bypass, "GET", "/office/00000000000000", 404, %{"message" => "Not found"})
 
       assert {:error, %Cnpja.Error{status: 404}} =
                Cnpja.get_office("00000000000000", base_url: base_url(bypass))
@@ -304,14 +304,14 @@ defmodule CnpjaTest do
 
   describe "get_office_map/2" do
     test "returns binary on success", %{bypass: bypass} do
-      stub_binary(bypass, "GET", "/offices/37335118000180/map", 200, <<1, 2, 3>>)
+      stub_binary(bypass, "GET", "/office/37335118000180/map", 200, <<1, 2, 3>>)
 
       assert {:ok, <<1, 2, 3>>} =
                Cnpja.get_office_map("37335118000180", base_url: base_url(bypass))
     end
 
     test "accepts width, height, zoom options", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/offices/37335118000180/map", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/office/37335118000180/map", fn conn ->
         assert conn.query_string =~ "width=640"
         assert conn.query_string =~ "height=480"
 
@@ -331,14 +331,14 @@ defmodule CnpjaTest do
 
   describe "get_office_street_view/2" do
     test "returns binary on success", %{bypass: bypass} do
-      stub_binary(bypass, "GET", "/offices/37335118000180/street", 200, <<4, 5, 6>>)
+      stub_binary(bypass, "GET", "/office/37335118000180/street", 200, <<4, 5, 6>>)
 
       assert {:ok, <<4, 5, 6>>} =
                Cnpja.get_office_street_view("37335118000180", base_url: base_url(bypass))
     end
 
     test "accepts fov option", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/offices/37335118000180/street", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/office/37335118000180/street", fn conn ->
         assert conn.query_string =~ "fov=90"
 
         conn
@@ -353,7 +353,7 @@ defmodule CnpjaTest do
 
   describe "search_offices/1" do
     test "returns paginated search result", %{bypass: bypass} do
-      stub(bypass, "GET", "/offices", 200, %{
+      stub(bypass, "GET", "/office", 200, %{
         "count" => 1,
         "limit" => 10,
         "next" => nil,
@@ -365,7 +365,7 @@ defmodule CnpjaTest do
     end
 
     test "passes search filters as query params", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/offices", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/office", fn conn ->
         assert conn.query_string =~ "statusIn=2"
         assert conn.query_string =~ "stateIn=SP"
         assert conn.query_string =~ "simplesOptant=true"
@@ -389,14 +389,14 @@ defmodule CnpjaTest do
 
   describe "get_company/2" do
     test "returns company struct on success", %{bypass: bypass} do
-      stub(bypass, "GET", "/companies/37335118", 200, company_fixture())
+      stub(bypass, "GET", "/company/37335118", 200, company_fixture())
 
       assert {:ok, %Cnpja.Company{id: 37_335_118, name: "EMPRESA EXEMPLO LTDA"}} =
                Cnpja.get_company("37335118", base_url: base_url(bypass))
     end
 
     test "parses nature and size labels with acronym", %{bypass: bypass} do
-      stub(bypass, "GET", "/companies/37335118", 200, company_fixture())
+      stub(bypass, "GET", "/company/37335118", 200, company_fixture())
 
       {:ok, company} = Cnpja.get_company("37335118", base_url: base_url(bypass))
       assert %Cnpja.Label{id: 2062} = company.nature
@@ -404,7 +404,7 @@ defmodule CnpjaTest do
     end
 
     test "parses jurisdiction", %{bypass: bypass} do
-      stub(bypass, "GET", "/companies/37335118", 200, company_fixture())
+      stub(bypass, "GET", "/company/37335118", 200, company_fixture())
 
       {:ok, company} = Cnpja.get_company("37335118", base_url: base_url(bypass))
       assert company.jurisdiction == "SP"
@@ -413,7 +413,7 @@ defmodule CnpjaTest do
 
   describe "get_person/2" do
     test "returns person struct on success", %{bypass: bypass} do
-      stub(bypass, "GET", "/persons/abc123", 200, %{
+      stub(bypass, "GET", "/person/abc123", 200, %{
         "id" => "abc123",
         "type" => "NATURAL",
         "name" => "FULANO DE TAL",
@@ -425,7 +425,7 @@ defmodule CnpjaTest do
     end
 
     test "parses person membership", %{bypass: bypass} do
-      stub(bypass, "GET", "/persons/abc123", 200, %{
+      stub(bypass, "GET", "/person/abc123", 200, %{
         "id" => "abc123",
         "type" => "NATURAL",
         "name" => "FULANO DE TAL",
@@ -460,7 +460,7 @@ defmodule CnpjaTest do
 
   describe "search_persons/1" do
     test "returns paginated search result", %{bypass: bypass} do
-      stub(bypass, "GET", "/persons", 200, %{
+      stub(bypass, "GET", "/person", 200, %{
         "count" => 0,
         "limit" => 10,
         "next" => nil,
@@ -472,7 +472,7 @@ defmodule CnpjaTest do
     end
 
     test "passes search filters as query params", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/persons", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/person", fn conn ->
         assert conn.query_string =~ "typeIn=NATURAL"
         assert conn.query_string =~ "nameIn=Fulano"
 
@@ -646,7 +646,7 @@ defmodule CnpjaTest do
           "state" => "SP"
         })
 
-      stub(bypass, "GET", "/offices/37335118000180", 200, fixture)
+      stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert office.address.zip == "01310100"
@@ -660,7 +660,7 @@ defmodule CnpjaTest do
           "state" => "SP"
         })
 
-      stub(bypass, "GET", "/offices/37335118000180", 200, fixture)
+      stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
       assert office.address.zip == "01310100"
