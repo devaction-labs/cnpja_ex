@@ -49,7 +49,7 @@ defmodule CnpjaTest do
 
   defp company_fixture do
     %{
-      "id" => 37_335_118,
+      "id" => "37335118",
       "name" => "EMPRESA EXEMPLO LTDA",
       "equity" => 100_000.0,
       "nature" => %{"id" => 2062, "text" => "Sociedade Empresária Limitada"},
@@ -266,11 +266,11 @@ defmodule CnpjaTest do
     end
 
     test "parses embedded suframa", %{bypass: bypass} do
-      fixture = Map.put(office_fixture(), "suframa", suframa_fixture())
+      fixture = Map.put(office_fixture(), "suframa", [suframa_fixture()])
       stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
-      assert %Cnpja.Suframa{number: "10123456", approved: true, head: true} = office.suframa
+      assert [%Cnpja.Suframa{number: "10123456", approved: true, head: true}] = office.suframa
     end
 
     test "returns error 400 with constraints", %{bypass: bypass} do
@@ -299,6 +299,19 @@ defmodule CnpjaTest do
 
       assert {:error, %Cnpja.Error{status: 404}} =
                Cnpja.get_office("00000000000000", base_url: base_url(bypass))
+    end
+  end
+
+  describe "binary endpoint JSON error" do
+    test "parses JSON error body from binary endpoint", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/office/37335118000180/map", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(404, Jason.encode!(%{"message" => "Not found"}))
+      end)
+
+      assert {:error, %Cnpja.Error{status: 404, message: "Not found"}} =
+               Cnpja.get_office_map("37335118000180", base_url: base_url(bypass))
     end
   end
 
@@ -366,9 +379,9 @@ defmodule CnpjaTest do
 
     test "passes search filters as query params", %{bypass: bypass} do
       Bypass.expect_once(bypass, "GET", "/office", fn conn ->
-        assert conn.query_string =~ "statusIn=2"
-        assert conn.query_string =~ "stateIn=SP"
-        assert conn.query_string =~ "simplesOptant=true"
+        assert conn.query_string =~ "status.id.in=2"
+        assert conn.query_string =~ "address.state.in=SP"
+        assert conn.query_string =~ "company.simples.optant.eq=true"
 
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
@@ -391,7 +404,7 @@ defmodule CnpjaTest do
     test "returns company struct on success", %{bypass: bypass} do
       stub(bypass, "GET", "/company/37335118", 200, company_fixture())
 
-      assert {:ok, %Cnpja.Company{id: 37_335_118, name: "EMPRESA EXEMPLO LTDA"}} =
+      assert {:ok, %Cnpja.Company{id: "37335118", name: "EMPRESA EXEMPLO LTDA"}} =
                Cnpja.get_company("37335118", base_url: base_url(bypass))
     end
 
@@ -434,7 +447,7 @@ defmodule CnpjaTest do
             "since" => "2015-01-01",
             "role" => %{"id" => 49, "text" => "Sócio-Administrador"},
             "company" => %{
-              "id" => 37_335_118,
+              "id" => "37335118",
               "name" => "EMPRESA EXEMPLO LTDA",
               "equity" => 100_000.0,
               "nature" => %{"id" => 2062, "text" => "Sociedade Empresária Limitada"},
@@ -473,8 +486,8 @@ defmodule CnpjaTest do
 
     test "passes search filters as query params", %{bypass: bypass} do
       Bypass.expect_once(bypass, "GET", "/person", fn conn ->
-        assert conn.query_string =~ "typeIn=NATURAL"
-        assert conn.query_string =~ "nameIn=Fulano"
+        assert conn.query_string =~ "type.in=NATURAL"
+        assert conn.query_string =~ "name.in=Fulano"
 
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
@@ -499,7 +512,7 @@ defmodule CnpjaTest do
         |> Map.put("size", %{"id" => 1, "acronym" => "ME", "text" => "Micro Empresa"})
         |> Map.put("jurisdiction", "SP")
 
-      stub(bypass, "GET", "/rfb/37335118000180", 200, rfb)
+      stub(bypass, "GET", "/rfb", 200, rfb)
 
       {:ok, result} = Cnpja.get_rfb("37335118000180", base_url: base_url(bypass))
       assert result.tax_id == "37335118000180"
@@ -513,14 +526,14 @@ defmodule CnpjaTest do
 
   describe "get_rfb_certificate/2" do
     test "returns pdf binary on success", %{bypass: bypass} do
-      stub_binary(bypass, "GET", "/rfb/37335118000180/certificate", 200, "%PDF-1.4")
+      stub_binary(bypass, "GET", "/rfb/certificate", 200, "%PDF-1.4")
 
       assert {:ok, "%PDF-1.4"} =
                Cnpja.get_rfb_certificate("37335118000180", base_url: base_url(bypass))
     end
 
     test "passes pages option as query param", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/rfb/37335118000180/certificate", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/rfb/certificate", fn conn ->
         assert conn.query_string =~ "pages=REGISTRATION%2CMEMBERS"
 
         conn
@@ -537,7 +550,7 @@ defmodule CnpjaTest do
 
   describe "get_simples/2" do
     test "returns simples struct on success", %{bypass: bypass} do
-      stub(bypass, "GET", "/simples/37335118000180", 200, %{
+      stub(bypass, "GET", "/simples", 200, %{
         "taxId" => "37335118000180",
         "updated" => "2024-01-01T00:00:00.000Z",
         "simples" => %{
@@ -557,7 +570,7 @@ defmodule CnpjaTest do
 
   describe "get_simples_certificate/2" do
     test "returns pdf binary on success", %{bypass: bypass} do
-      stub_binary(bypass, "GET", "/simples/37335118000180/certificate", 200, "%PDF-1.4")
+      stub_binary(bypass, "GET", "/simples/certificate", 200, "%PDF-1.4")
 
       assert {:ok, "%PDF-1.4"} =
                Cnpja.get_simples_certificate("37335118000180", base_url: base_url(bypass))
@@ -566,7 +579,7 @@ defmodule CnpjaTest do
 
   describe "get_ccc/3" do
     test "returns ccc struct on success", %{bypass: bypass} do
-      stub(bypass, "GET", "/ccc/37335118000180/SP", 200, %{
+      stub(bypass, "GET", "/ccc", 200, %{
         "taxId" => "37335118000180",
         "updated" => "2024-01-01T00:00:00.000Z",
         "name" => "EMPRESA EXEMPLO LTDA",
@@ -592,14 +605,14 @@ defmodule CnpjaTest do
 
   describe "get_ccc_certificate/2" do
     test "returns pdf binary on success", %{bypass: bypass} do
-      stub_binary(bypass, "GET", "/ccc/37335118000180/certificate", 200, "%PDF-1.4")
+      stub_binary(bypass, "GET", "/ccc/certificate", 200, "%PDF-1.4")
 
       assert {:ok, "%PDF-1.4"} =
                Cnpja.get_ccc_certificate("37335118000180", base_url: base_url(bypass))
     end
 
     test "passes state option as query param", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/ccc/37335118000180/certificate", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/ccc/certificate", fn conn ->
         assert conn.query_string =~ "state=SP"
 
         conn
@@ -613,7 +626,7 @@ defmodule CnpjaTest do
 
   describe "get_suframa/2" do
     test "returns suframa struct with all fields", %{bypass: bypass} do
-      stub(bypass, "GET", "/suframa/37335118000180", 200, suframa_fixture())
+      stub(bypass, "GET", "/suframa", 200, suframa_fixture())
 
       {:ok, suframa} = Cnpja.get_suframa("37335118000180", base_url: base_url(bypass))
       assert suframa.tax_id == "37335118000180"
@@ -630,7 +643,7 @@ defmodule CnpjaTest do
 
   describe "get_suframa_certificate/2" do
     test "returns pdf binary on success", %{bypass: bypass} do
-      stub_binary(bypass, "GET", "/suframa/37335118000180/certificate", 200, "%PDF-1.4")
+      stub_binary(bypass, "GET", "/suframa/certificate", 200, "%PDF-1.4")
 
       assert {:ok, "%PDF-1.4"} =
                Cnpja.get_suframa_certificate("37335118000180", base_url: base_url(bypass))

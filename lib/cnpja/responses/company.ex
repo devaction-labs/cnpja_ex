@@ -16,7 +16,7 @@ defmodule Cnpja.Company do
   ]
 
   @type t :: %__MODULE__{
-          id: integer(),
+          id: String.t(),
           name: String.t(),
           equity: number() | nil,
           nature: Cnpja.Label.t() | nil,

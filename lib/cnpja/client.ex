@@ -49,6 +49,4 @@ defmodule Cnpja.Client do
       _ -> %{"message" => body}
     end
   end
-
-  defp parse_error_body(body), do: body
 end

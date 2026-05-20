@@ -158,9 +158,9 @@ defmodule Cnpja.SharedTest do
     end
 
     test "parses non-nil company via from_map_nullable" do
-      map = %{"id" => 1, "name" => "EMPRESA LTDA", "members" => [], "offices" => []}
+      map = %{"id" => "37335118", "name" => "EMPRESA LTDA", "members" => [], "offices" => []}
 
-      assert %Cnpja.Company{id: 1, name: "EMPRESA LTDA"} =
+      assert %Cnpja.Company{id: "37335118", name: "EMPRESA LTDA"} =
                Cnpja.Company.from_map_nullable(map)
     end
   end
@@ -181,16 +181,25 @@ defmodule Cnpja.SharedTest do
     end
   end
 
-  describe "Cnpja.OfficeLinks.from_map_nullable/1" do
+  describe "Cnpja.Suframa.from_map_nullable/1" do
     test "returns nil when given nil" do
-      assert nil == Cnpja.OfficeLinks.from_map_nullable(nil)
+      assert nil == Cnpja.Suframa.from_map_nullable(nil)
     end
 
-    test "parses office links map" do
-      map = %{"rfbCertificate" => "https://example.com/rfb.pdf"}
+    test "parses non-nil suframa via from_map_nullable" do
+      map = %{"taxId" => "37335118000180"}
 
-      assert %Cnpja.OfficeLinks{rfb_certificate: "https://example.com/rfb.pdf"} =
-               Cnpja.OfficeLinks.from_map_nullable(map)
+      assert %Cnpja.Suframa{tax_id: "37335118000180"} =
+               Cnpja.Suframa.from_map_nullable(map)
+    end
+  end
+
+  describe "Cnpja.Link.from_map/1" do
+    test "parses link map" do
+      map = %{"type" => "RFB_CERTIFICATE", "url" => "https://example.com/rfb.pdf"}
+
+      assert %Cnpja.Link{type: "RFB_CERTIFICATE", url: "https://example.com/rfb.pdf"} =
+               Cnpja.Link.from_map(map)
     end
   end
 end

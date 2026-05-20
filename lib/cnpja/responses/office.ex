@@ -38,11 +38,11 @@ defmodule Cnpja.Office do
           phones: [Cnpja.Phone.t()],
           emails: [Cnpja.Email.t()],
           registrations: [Cnpja.StateRegistration.t()],
-          links: Cnpja.OfficeLinks.t() | nil,
+          links: [Cnpja.Link.t()],
           company: Cnpja.CompanyRef.t() | nil,
           main_activity: Cnpja.Activity.t() | nil,
           side_activities: [Cnpja.Activity.t()],
-          suframa: Cnpja.Suframa.t() | nil,
+          suframa: [Cnpja.Suframa.t()],
           updated: String.t() | nil
         }
 
@@ -63,11 +63,11 @@ defmodule Cnpja.Office do
       phones: Enum.map(map["phones"] || [], &Cnpja.Phone.from_map/1),
       emails: Enum.map(map["emails"] || [], &Cnpja.Email.from_map/1),
       registrations: Enum.map(map["registrations"] || [], &Cnpja.StateRegistration.from_map/1),
-      links: Cnpja.OfficeLinks.from_map_nullable(map["links"]),
+      links: Enum.map(map["links"] || [], &Cnpja.Link.from_map/1),
       company: Cnpja.CompanyRef.from_map_nullable(map["company"]),
       main_activity: Cnpja.Activity.from_map_nullable(map["mainActivity"]),
       side_activities: Enum.map(map["sideActivities"] || [], &Cnpja.Activity.from_map/1),
-      suframa: Cnpja.Suframa.from_map_nullable(map["suframa"]),
+      suframa: Enum.map(map["suframa"] || [], &Cnpja.Suframa.from_map/1),
       updated: map["updated"]
     }
   end

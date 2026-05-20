@@ -5,7 +5,7 @@ defmodule Cnpja.CompanyRef do
   defstruct [:id, :name, :equity, :nature, :size, :jurisdiction, :members, :simples, :simei]
 
   @type t :: %__MODULE__{
-          id: integer(),
+          id: String.t(),
           name: String.t(),
           equity: number() | nil,
           nature: Cnpja.Label.t() | nil,
