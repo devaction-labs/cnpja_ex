@@ -43,7 +43,7 @@
 - RFB, Simples, CCC, and SUFRAMA endpoints corrected to use `taxId` as a **query param** instead of a path segment (e.g. `/rfb?taxId=...` not `/rfb/37335118000180`)
 - All search query param names corrected from camelCase (`simplesOptant`, `stateIn`) to API dot-notation (`company.simples.optant.eq`, `address.state.in`)
 - `get_ccc/3` `states` argument now sent as `states=` query param instead of a path segment
-- Removed unreachable `parse_error_body/1` fallback clause from `Cnpja.Client`
+- Removed unreachable `parse_error_body/1` fallback clause from the HTTP client
 
 ### Added
 

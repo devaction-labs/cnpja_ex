@@ -119,7 +119,8 @@ defmodule Cnpja.MixProject do
           Cnpja.Link,
           Cnpja.SuframaIncentive
         ],
-        Internals: [Cnpja.Client, Cnpja.Config, Cnpja.Error]
+        # Client and Config use @moduledoc false and are not listed in HexDocs.
+        Internals: [Cnpja.Error]
       ]
     ]
   end
