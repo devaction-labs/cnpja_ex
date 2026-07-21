@@ -39,5 +39,11 @@ defmodule Cnpja.BypassHelpers do
     end)
   end
 
+  def stub_empty(bypass, method, path, status) do
+    Bypass.expect_once(bypass, method, path, fn conn ->
+      Plug.Conn.send_resp(conn, status, "")
+    end)
+  end
+
   def base_url(bypass), do: "http://localhost:#{bypass.port}"
 end

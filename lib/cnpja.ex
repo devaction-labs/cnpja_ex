@@ -2,13 +2,16 @@ defmodule Cnpja do
   @moduledoc """
   Elixir SDK for the CNPJá API.
 
-  All functions return `{:ok, struct}` on success or `{:error, %Cnpja.Error{}}` on failure.
+  All functions return `{:ok, struct}` on success or `{:error, %Cnpja.Error{}}` on failure
+  (except `delete_list/2`, which returns `:ok` on success).
 
   ## Configuration
 
   Via `config.exs`:
 
-      config :cnpja_ex, api_key: System.get_env("CNPJA_API_KEY")
+      config :cnpja_ex,
+        api_key: System.get_env("CNPJA_API_KEY"),
+        receive_timeout: 30_000
 
   Via option (multi-tenant):
 
@@ -26,7 +29,7 @@ defmodule Cnpja do
 
   alias Cnpja.Client
 
-  @sdk_keys [:api_key, :base_url]
+  @sdk_keys [:api_key, :base_url, :receive_timeout]
 
   @param_map %{
     # --- shared ---
@@ -36,6 +39,8 @@ defmodule Cnpja do
     fov: "fov",
     simples_history: "simplesHistory",
     registrations_source: "registrationsSource",
+    history: "history",
+    search: "search",
 
     # --- search_offices (dot-notation API params) ---
     names_in: "names.in",
@@ -108,8 +113,31 @@ defmodule Cnpja do
     name_nin: "name.nin",
     tax_id_in: "taxId.in",
     age_in: "age.in",
-    person_country_in: "country.id.in"
+    person_country_in: "country.id.in",
+    person_country_nin: "country.id.nin"
   }
+
+  @body_key_map %{
+    title: "title",
+    description: "description",
+    limit: "limit",
+    items: "items",
+    query: "query",
+    options: "options",
+    simples: "simples",
+    simples_history: "simplesHistory",
+    registrations: "registrations",
+    registrations_source: "registrationsSource",
+    suframa: "suframa",
+    geocoding: "geocoding",
+    strategy: "strategy",
+    max_age: "maxAge",
+    max_stale: "maxStale"
+  }
+
+  # ---------------------------------------------------------------------------
+  # Account
+  # ---------------------------------------------------------------------------
 
   @doc """
   Returns the credit balance for the account associated with the API key.
@@ -120,6 +148,10 @@ defmodule Cnpja do
       {:ok, Cnpja.Credit.from_map(body)}
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # Zip / Company / Office / Person
+  # ---------------------------------------------------------------------------
 
   @doc """
   Looks up a Brazilian postal code (CEP).
@@ -139,14 +171,12 @@ defmodule Cnpja do
   @doc """
   Looks up a company by the first 8 digits of the CNPJ (root).
 
-  ## Options
-
-  - `:simples` — include Simples Nacional data
-  - `:simples_history` — include Simples Nacional history
+  The response includes members, offices, and Simples/MEI data when available.
+  This endpoint has no query options in the Commercial API.
   """
   @spec get_company(String.t(), keyword()) :: {:ok, Cnpja.Company.t()} | {:error, Cnpja.Error.t()}
   def get_company(company_id, opts \\ []) do
-    with {:ok, body} <- Client.get("/company/#{company_id}", build_query(opts), sdk_opts(opts)) do
+    with {:ok, body} <- Client.get("/company/#{company_id}", [], sdk_opts(opts)) do
       {:ok, Cnpja.Company.from_map(body)}
     end
   end
@@ -239,6 +269,8 @@ defmodule Cnpja do
   - `:activity_in` / `:activity_nin` — CNAE codes across main and side activities
   - `:has_phone` — `true`/`false` for phone presence
   - `:has_email` — `true`/`false` for e-mail presence
+
+  Lists of values are joined as comma-separated strings.
   """
   @spec search_offices(keyword()) :: {:ok, Cnpja.OfficeSearch.t()} | {:error, Cnpja.Error.t()}
   def search_offices(opts \\ []) do
@@ -268,7 +300,7 @@ defmodule Cnpja do
   - `:name_in` / `:name_nin` — include/exclude name terms
   - `:tax_id_in` — partial CPF digits (positions 4–9, comma-separated)
   - `:age_in` — age ranges, e.g. `"21-30,31-40"`
-  - `:person_country_in` — M49 country codes (comma-separated)
+  - `:person_country_in` / `:person_country_nin` — M49 country codes
   """
   @spec search_persons(keyword()) :: {:ok, Cnpja.PersonSearch.t()} | {:error, Cnpja.Error.t()}
   def search_persons(opts \\ []) do
@@ -276,6 +308,10 @@ defmodule Cnpja do
       {:ok, Cnpja.PersonSearch.from_map(body)}
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # Online registries (RFB, Simples, CCC, SUFRAMA)
+  # ---------------------------------------------------------------------------
 
   @doc """
   Queries establishment data directly from the Receita Federal.
@@ -304,9 +340,16 @@ defmodule Cnpja do
 
   @doc """
   Queries Simples Nacional and MEI data for a company.
+
+  ## Options
+
+  - `:history` — include previous Simples/MEI periods (`true`/`false`)
+  - `:simples_history` — alias for `:history` (kept for consistency with `get_office/2`)
+  - `:strategy` / `:max_age` / `:max_stale` / `:sync` — cache controls
   """
   @spec get_simples(String.t(), keyword()) :: {:ok, Cnpja.Simples.t()} | {:error, Cnpja.Error.t()}
   def get_simples(tax_id, opts \\ []) do
+    opts = normalize_simples_opts(opts)
     query = [{"taxId", tax_id} | build_query(opts)]
 
     with {:ok, body} <- Client.get("/simples", query, sdk_opts(opts)) do
@@ -386,11 +429,196 @@ defmodule Cnpja do
     Client.get_binary("/suframa/certificate", [{"taxId", tax_id}], sdk_opts(opts))
   end
 
+  # ---------------------------------------------------------------------------
+  # Saved lists + export
+  # ---------------------------------------------------------------------------
+
+  @doc """
+  Creates a saved CNPJ list on the account (up to 1000 lists).
+
+  ## Attributes
+
+  - `:title` — required
+  - `:description` — optional
+  - `:items` — list of 14-digit CNPJs (mutually exclusive with `:query`)
+  - `:query` — search filters (same keys as `search_offices/1`, or a map with API keys)
+  - `:limit` — max establishments when generating from `:query`
+
+  ## Example
+
+      {:ok, list} = Cnpja.create_list(
+        title: "SP ativas",
+        query: [state_in: ["SP"], status_in: [2]],
+        limit: 1000
+      )
+  """
+  @spec create_list(keyword() | map(), keyword()) ::
+          {:ok, Cnpja.CnpjList.t()} | {:error, Cnpja.Error.t()}
+  def create_list(attrs, opts \\ []) do
+    {attrs, opts} = split_attrs_opts(attrs, opts)
+
+    with {:ok, body} <- Client.post("/list", build_body(attrs), sdk_opts(opts)) do
+      {:ok, Cnpja.CnpjList.from_map(body)}
+    end
+  end
+
+  @doc """
+  Searches saved lists on the account.
+
+  ## Options
+
+  - `:token` — pagination cursor
+  - `:limit` — page size (default 10)
+  - `:search` — term matched against title or description
+  """
+  @spec search_lists(keyword()) :: {:ok, Cnpja.CnpjListPage.t()} | {:error, Cnpja.Error.t()}
+  def search_lists(opts \\ []) do
+    with {:ok, body} <- Client.get("/list", build_query(opts), sdk_opts(opts)) do
+      {:ok, Cnpja.CnpjListPage.from_map(body)}
+    end
+  end
+
+  @doc """
+  Fetches a saved list by id (includes `items`).
+  """
+  @spec get_list(String.t(), keyword()) ::
+          {:ok, Cnpja.CnpjList.t()} | {:error, Cnpja.Error.t()}
+  def get_list(list_id, opts \\ []) do
+    with {:ok, body} <- Client.get("/list/#{list_id}", [], sdk_opts(opts)) do
+      {:ok, Cnpja.CnpjList.from_map(body)}
+    end
+  end
+
+  @doc """
+  Updates a saved list (`:title`, `:description`, and/or `:items`).
+  """
+  @spec update_list(String.t(), keyword() | map(), keyword()) ::
+          {:ok, Cnpja.CnpjList.t()} | {:error, Cnpja.Error.t()}
+  def update_list(list_id, attrs, opts \\ []) do
+    {attrs, opts} = split_attrs_opts(attrs, opts)
+
+    with {:ok, body} <- Client.patch("/list/#{list_id}", build_body(attrs), sdk_opts(opts)) do
+      {:ok, Cnpja.CnpjList.from_map(body)}
+    end
+  end
+
+  @doc """
+  Deletes a saved list.
+  """
+  @spec delete_list(String.t(), keyword()) :: :ok | {:error, Cnpja.Error.t()}
+  def delete_list(list_id, opts \\ []) do
+    Client.delete("/list/#{list_id}", sdk_opts(opts))
+  end
+
+  @doc """
+  Starts an asynchronous export of a saved list (Excel + JSON zip).
+
+  ## Options (export job)
+
+  Pass enrichment options as the second argument (keyword or map):
+
+  - `:simples` / `:simples_history`
+  - `:registrations` / `:registrations_source`
+  - `:suframa` / `:geocoding`
+  - `:strategy` / `:max_age` / `:max_stale`
+
+  ## Example
+
+      {:ok, %{id: export_id}} =
+        Cnpja.create_list_export(list_id, simples: true, geocoding: true)
+
+      {:ok, export} = Cnpja.get_list_export(list_id, export_id)
+      # poll until export.status == "COMPLETED"
+  """
+  @spec create_list_export(String.t(), keyword() | map(), keyword()) ::
+          {:ok, Cnpja.CnpjListExportId.t()} | {:error, Cnpja.Error.t()}
+  def create_list_export(list_id, export_opts \\ [], opts \\ []) do
+    body = %{"options" => build_body(export_opts)}
+
+    with {:ok, resp} <- Client.post("/list/#{list_id}/export", body, sdk_opts(opts)) do
+      {:ok, Cnpja.CnpjListExportId.from_map(resp)}
+    end
+  end
+
+  @doc """
+  Lists export jobs for a saved list.
+
+  ## Options
+
+  - `:token` — pagination cursor
+  - `:limit` — page size
+  """
+  @spec search_list_exports(String.t(), keyword()) ::
+          {:ok, Cnpja.CnpjListExportPage.t()} | {:error, Cnpja.Error.t()}
+  def search_list_exports(list_id, opts \\ []) do
+    with {:ok, body} <- Client.get("/list/#{list_id}/export", build_query(opts), sdk_opts(opts)) do
+      {:ok, Cnpja.CnpjListExportPage.from_map(body)}
+    end
+  end
+
+  @doc """
+  Fetches a single export job (status, progress, download links).
+  """
+  @spec get_list_export(String.t(), String.t(), keyword()) ::
+          {:ok, Cnpja.CnpjListExport.t()} | {:error, Cnpja.Error.t()}
+  def get_list_export(list_id, export_id, opts \\ []) do
+    with {:ok, body} <-
+           Client.get("/list/#{list_id}/export/#{export_id}", [], sdk_opts(opts)) do
+      {:ok, Cnpja.CnpjListExport.from_map(body)}
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Internals
+  # ---------------------------------------------------------------------------
+
   defp sdk_opts(opts), do: Keyword.take(opts, @sdk_keys)
+
+  # Allow SDK opts (api_key, base_url, …) mixed into keyword attrs for create/update.
+  defp split_attrs_opts(attrs, opts) when is_list(attrs) do
+    sdk = Keyword.take(attrs, @sdk_keys)
+    {Keyword.drop(attrs, @sdk_keys), Keyword.merge(sdk, opts)}
+  end
+
+  defp split_attrs_opts(attrs, opts) when is_map(attrs), do: {attrs, opts}
 
   defp build_query(opts) do
     opts
     |> Keyword.drop(@sdk_keys)
     |> Enum.map(fn {k, v} -> {Map.get(@param_map, k, to_string(k)), v} end)
   end
+
+  # `/simples` uses `history`; accept `:simples_history` as alias.
+  defp normalize_simples_opts(opts) do
+    case Keyword.pop(opts, :simples_history) do
+      {nil, opts} -> opts
+      {val, opts} -> Keyword.put_new(opts, :history, val)
+    end
+  end
+
+  defp build_body(attrs) when is_list(attrs) do
+    attrs
+    |> Keyword.drop(@sdk_keys)
+    |> Map.new(fn {k, v} -> {body_key(k), body_value(k, v)} end)
+  end
+
+  defp build_body(attrs) when is_map(attrs) do
+    Map.new(attrs, fn
+      {k, v} when is_atom(k) -> {body_key(k), body_value(k, v)}
+      {k, v} when is_binary(k) -> {k, v}
+    end)
+  end
+
+  defp body_key(k), do: Map.get(@body_key_map, k, to_string(k))
+
+  defp body_value(:query, v) when is_list(v) do
+    Map.new(build_query(v))
+  end
+
+  defp body_value(:query, v) when is_map(v), do: v
+
+  defp body_value(:options, v) when is_list(v) or is_map(v), do: build_body(v)
+
+  defp body_value(:registrations, v) when is_list(v), do: v
+  defp body_value(_k, v), do: v
 end

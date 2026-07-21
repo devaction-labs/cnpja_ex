@@ -4,7 +4,7 @@
 [![Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/cnpja_ex)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Elixir SDK for the [CNPJá API](https://cnpja.com) — real-time lookups for Brazilian CNPJ, CEP, Receita Federal, Simples Nacional, CCC, SUFRAMA, and more.
+Elixir SDK for the [CNPJá API](https://cnpja.com) — real-time lookups for Brazilian CNPJ, CEP, Receita Federal, Simples Nacional, CCC, SUFRAMA, saved lists and bulk export.
 
 ## Installation
 
@@ -13,7 +13,7 @@ Add `cnpja_ex` to your dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:cnpja_ex, "~> 0.1.0"}
+    {:cnpja_ex, "~> 0.2.0"}
   ]
 end
 ```
@@ -22,13 +22,15 @@ end
 
 ```elixir
 # config/config.exs
-config :cnpja_ex, api_key: System.get_env("CNPJA_API_KEY")
+config :cnpja_ex,
+  api_key: System.get_env("CNPJA_API_KEY"),
+  receive_timeout: 30_000
 ```
 
-You can also pass the key per call (useful for multi-tenant apps):
+You can also pass options per call (useful for multi-tenant apps):
 
 ```elixir
-Cnpja.get_office("37335118000180", api_key: "other-key")
+Cnpja.get_office("37335118000180", api_key: "other-key", receive_timeout: 60_000)
 ```
 
 ## Quick start
@@ -62,10 +64,19 @@ office.address.city   #=> "São Paulo"
 | `Cnpja.get_ccc_certificate/2` | CCC regularity certificate (PDF) |
 | `Cnpja.get_suframa/2` | SUFRAMA enrollment data |
 | `Cnpja.get_suframa_certificate/2` | SUFRAMA incentives certificate (PDF) |
+| `Cnpja.create_list/2` | Create a saved CNPJ list |
+| `Cnpja.search_lists/1` | Search saved lists |
+| `Cnpja.get_list/2` | Get a saved list (with items) |
+| `Cnpja.update_list/3` | Update a saved list |
+| `Cnpja.delete_list/2` | Delete a saved list |
+| `Cnpja.create_list_export/3` | Start async Excel/JSON export |
+| `Cnpja.search_list_exports/2` | List export jobs for a list |
+| `Cnpja.get_list_export/3` | Export status, progress and download links |
 
 ## Error handling
 
-All functions return `{:ok, struct}` or `{:error, %Cnpja.Error{}}`. No exceptions are raised.
+All lookup functions return `{:ok, struct}` or `{:error, %Cnpja.Error{}}`. No exceptions are raised.
+`delete_list/2` returns `:ok` or `{:error, %Cnpja.Error{}}`.
 
 ```elixir
 case Cnpja.get_office("37335118000180") do
@@ -81,8 +92,8 @@ case Cnpja.get_office("37335118000180") do
   {:error, %Cnpja.Error{status: 401}} ->
     "invalid API key"
 
-  {:error, %Cnpja.Error{status: 400, constraints: constraints}} ->
-    "validation error: #{inspect(constraints)}"
+  {:error, %Cnpja.Error{status: 400, code: code, constraints: constraints}} ->
+    "validation error (#{code}): #{inspect(constraints)}"
 
   {:error, %Cnpja.Error{}} ->
     "unexpected error"
@@ -104,6 +115,27 @@ Cnpja.get_office("37335118000180",
   max_age: 45,
   max_stale: 365
 )
+```
+
+## Saved lists and bulk export
+
+Lists store CNPJs (or search filters) on your CNPJá account for asynchronous bulk export:
+
+```elixir
+{:ok, list} =
+  Cnpja.create_list(
+    title: "SP ativas",
+    query: [state_in: "SP", status_in: "2"],
+    limit: 1000
+  )
+
+{:ok, %{id: export_id}} =
+  Cnpja.create_list_export(list.id, simples: true, geocoding: true)
+
+{:ok, export} = Cnpja.get_list_export(list.id, export_id)
+# poll until export.status == "COMPLETED"
+export.links
+#=> [%Cnpja.Link{type: "EXCEL", url: "..."}, %Cnpja.Link{type: "JSON_ZIP", url: "..."}]
 ```
 
 ## License

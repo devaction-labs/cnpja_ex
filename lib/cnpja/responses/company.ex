@@ -23,7 +23,7 @@ defmodule Cnpja.Company do
           size: Cnpja.SizeLabel.t() | nil,
           jurisdiction: String.t() | nil,
           members: [Cnpja.Member.t()],
-          offices: [Cnpja.Office.t()],
+          offices: [Cnpja.CompanyOffice.t()],
           simples: Cnpja.SimplesOpt.t() | nil,
           simei: Cnpja.SimplesOpt.t() | nil
         }
@@ -39,7 +39,7 @@ defmodule Cnpja.Company do
       size: Cnpja.SizeLabel.from_map_nullable(map["size"]),
       jurisdiction: map["jurisdiction"],
       members: Enum.map(map["members"] || [], &Cnpja.Member.from_map/1),
-      offices: Enum.map(map["offices"] || [], &Cnpja.Office.from_map/1),
+      offices: Enum.map(map["offices"] || [], &Cnpja.CompanyOffice.from_map/1),
       simples: Cnpja.SimplesOpt.from_map_nullable(map["simples"]),
       simei: Cnpja.SimplesOpt.from_map_nullable(map["simei"])
     }

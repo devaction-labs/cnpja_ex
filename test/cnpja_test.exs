@@ -66,6 +66,18 @@ defmodule CnpjaTest do
     Map.drop(company_fixture(), ["offices"])
   end
 
+  defp list_fixture do
+    %{
+      "id" => "list_1",
+      "created" => "2024-01-01T00:00:00.000Z",
+      "updated" => "2024-01-01T00:00:00.000Z",
+      "title" => "Minha lista",
+      "description" => "desc",
+      "size" => 2,
+      "items" => ["37335118000180", "00000000000191"]
+    }
+  end
+
   defp suframa_fixture do
     %{
       "taxId" => "37335118000180",
@@ -265,26 +277,42 @@ defmodule CnpjaTest do
       assert %Cnpja.SizeLabel{id: 1, acronym: "ME", text: "Micro Empresa"} = office.company.size
     end
 
-    test "parses embedded suframa", %{bypass: bypass} do
-      fixture = Map.put(office_fixture(), "suframa", [suframa_fixture()])
+    test "parses embedded suframa as OfficeSuframa", %{bypass: bypass} do
+      office_suframa = %{
+        "number" => "10123456",
+        "since" => "2010-01-01",
+        "approved" => true,
+        "approvalDate" => "2010-06-01",
+        "status" => %{"id" => 1, "text" => "Ativo"},
+        "incentives" => []
+      }
+
+      fixture = Map.put(office_fixture(), "suframa", [office_suframa])
       stub(bypass, "GET", "/office/37335118000180", 200, fixture)
 
       {:ok, office} = Cnpja.get_office("37335118000180", base_url: base_url(bypass))
-      assert [%Cnpja.Suframa{number: "10123456", approved: true, head: true}] = office.suframa
+      assert [%Cnpja.OfficeSuframa{number: "10123456", approved: true}] = office.suframa
     end
 
-    test "returns error 400 with constraints", %{bypass: bypass} do
+    test "returns error 400 with constraints and code", %{bypass: bypass} do
       stub(bypass, "GET", "/office/00000000000000", 400, %{
+        "code" => "bad_request",
         "message" => "Validation failed",
         "constraints" => ["taxId must be a valid CNPJ"]
       })
 
-      assert {:error, %Cnpja.Error{status: 400, constraints: ["taxId must be a valid CNPJ"]}} =
+      assert {:error,
+              %Cnpja.Error{
+                status: 400,
+                code: "bad_request",
+                constraints: ["taxId must be a valid CNPJ"]
+              }} =
                Cnpja.get_office("00000000000000", base_url: base_url(bypass))
     end
 
     test "returns error 429 with credit info", %{bypass: bypass} do
       stub(bypass, "GET", "/office/37335118000180", 429, %{
+        "code" => "too_many_requests",
         "message" => "Insufficient credits",
         "required" => 5,
         "remaining" => 2
@@ -421,6 +449,28 @@ defmodule CnpjaTest do
 
       {:ok, company} = Cnpja.get_company("37335118", base_url: base_url(bypass))
       assert company.jurisdiction == "SP"
+    end
+
+    test "parses nested offices as CompanyOffice", %{bypass: bypass} do
+      fixture =
+        Map.put(company_fixture(), "offices", [
+          %{
+            "taxId" => "37335118000180",
+            "alias" => "MATRIZ",
+            "founded" => "2010-01-01",
+            "head" => true,
+            "statusDate" => "2010-01-01",
+            "status" => %{"id" => 2, "text" => "Ativa"},
+            "mainActivity" => %{"id" => 6201, "text" => "Software"}
+          }
+        ])
+
+      stub(bypass, "GET", "/company/37335118", 200, fixture)
+
+      {:ok, company} = Cnpja.get_company("37335118", base_url: base_url(bypass))
+
+      assert [%Cnpja.CompanyOffice{tax_id: "37335118000180", head: true, alias: "MATRIZ"}] =
+               company.offices
     end
   end
 
@@ -566,6 +616,48 @@ defmodule CnpjaTest do
       assert %Cnpja.SimplesOpt{optant: true, since: "2015-01-01"} = simples.simples
       assert [%Cnpja.SimplesHistory{from: "2015-01-01"}] = simples.simples.history
     end
+
+    test "sends history query param", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/simples", fn conn ->
+        assert conn.query_string =~ "history=true"
+        refute conn.query_string =~ "simplesHistory"
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(
+          200,
+          Jason.encode!(%{
+            "taxId" => "37335118000180",
+            "updated" => "2024-01-01T00:00:00.000Z",
+            "simples" => %{"optant" => true, "since" => "2015-01-01"},
+            "simei" => nil
+          })
+        )
+      end)
+
+      Cnpja.get_simples("37335118000180", history: true, base_url: base_url(bypass))
+    end
+
+    test "maps simples_history alias to history query param", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/simples", fn conn ->
+        assert conn.query_string =~ "history=true"
+        refute conn.query_string =~ "simplesHistory"
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(
+          200,
+          Jason.encode!(%{
+            "taxId" => "37335118000180",
+            "updated" => "2024-01-01T00:00:00.000Z",
+            "simples" => %{"optant" => true, "since" => "2015-01-01"},
+            "simei" => nil
+          })
+        )
+      end)
+
+      Cnpja.get_simples("37335118000180", simples_history: true, base_url: base_url(bypass))
+    end
   end
 
   describe "get_simples_certificate/2" do
@@ -686,6 +778,190 @@ defmodule CnpjaTest do
 
       assert {:error, %Cnpja.Error{status: 0}} =
                Cnpja.get_credit(base_url: "http://localhost:1")
+    end
+  end
+
+  describe "search_persons country nin" do
+    test "passes person_country_nin as country.id.nin", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/person", fn conn ->
+        assert conn.query_string =~ "country.id.nin=76"
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(
+          200,
+          Jason.encode!(%{"next" => nil, "limit" => 10, "count" => 0, "records" => []})
+        )
+      end)
+
+      Cnpja.search_persons(person_country_nin: "76", base_url: base_url(bypass))
+    end
+  end
+
+  describe "query list values" do
+    test "joins list filters as comma-separated", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/office", fn conn ->
+        assert conn.query_string =~ "address.state.in=SP%2CRJ" or
+                 conn.query_string =~ "address.state.in=SP,RJ"
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(
+          200,
+          Jason.encode!(%{"next" => nil, "limit" => 10, "count" => 0, "records" => []})
+        )
+      end)
+
+      Cnpja.search_offices(state_in: ["SP", "RJ"], base_url: base_url(bypass))
+    end
+  end
+
+  describe "lists API" do
+    test "create_list posts body and returns CnpjList", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "POST", "/list", fn conn ->
+        {:ok, raw, conn} = Plug.Conn.read_body(conn)
+        body = Jason.decode!(raw)
+        assert body["title"] == "Minha lista"
+        assert body["items"] == ["37335118000180"]
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(201, Jason.encode!(list_fixture()))
+      end)
+
+      assert {:ok, %Cnpja.CnpjList{id: "list_1", title: "Minha lista", size: 2}} =
+               Cnpja.create_list(
+                 title: "Minha lista",
+                 items: ["37335118000180"],
+                 base_url: base_url(bypass)
+               )
+    end
+
+    test "create_list maps query keyword filters", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "POST", "/list", fn conn ->
+        {:ok, raw, conn} = Plug.Conn.read_body(conn)
+        body = Jason.decode!(raw)
+        assert body["title"] == "SP"
+        assert body["query"]["address.state.in"] == "SP"
+        assert body["limit"] == 100
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(201, Jason.encode!(list_fixture()))
+      end)
+
+      Cnpja.create_list(
+        title: "SP",
+        query: [state_in: "SP"],
+        limit: 100,
+        base_url: base_url(bypass)
+      )
+    end
+
+    test "search_lists returns page", %{bypass: bypass} do
+      stub(bypass, "GET", "/list", 200, %{
+        "next" => nil,
+        "limit" => 10,
+        "count" => 1,
+        "records" => [Map.drop(list_fixture(), ["items"])]
+      })
+
+      assert {:ok, %Cnpja.CnpjListPage{count: 1, records: [%Cnpja.CnpjListSummary{id: "list_1"}]}} =
+               Cnpja.search_lists(base_url: base_url(bypass))
+    end
+
+    test "get_list returns list", %{bypass: bypass} do
+      stub(bypass, "GET", "/list/list_1", 200, list_fixture())
+
+      assert {:ok, %Cnpja.CnpjList{id: "list_1", items: ["37335118000180", "00000000000191"]}} =
+               Cnpja.get_list("list_1", base_url: base_url(bypass))
+    end
+
+    test "update_list patches body", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "PATCH", "/list/list_1", fn conn ->
+        {:ok, raw, conn} = Plug.Conn.read_body(conn)
+        body = Jason.decode!(raw)
+        assert body["title"] == "Novo título"
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, Jason.encode!(%{list_fixture() | "title" => "Novo título"}))
+      end)
+
+      assert {:ok, %Cnpja.CnpjList{title: "Novo título"}} =
+               Cnpja.update_list("list_1", title: "Novo título", base_url: base_url(bypass))
+    end
+
+    test "delete_list returns :ok on 204", %{bypass: bypass} do
+      stub_empty(bypass, "DELETE", "/list/list_1", 204)
+
+      assert :ok = Cnpja.delete_list("list_1", base_url: base_url(bypass))
+    end
+
+    test "create_list_export posts options", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "POST", "/list/list_1/export", fn conn ->
+        {:ok, raw, conn} = Plug.Conn.read_body(conn)
+        body = Jason.decode!(raw)
+        assert body["options"]["simples"] == true
+        assert body["options"]["simplesHistory"] == true
+        assert body["options"]["maxAge"] == 45
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(201, Jason.encode!(%{"id" => "exp_1"}))
+      end)
+
+      assert {:ok, %Cnpja.CnpjListExportId{id: "exp_1"}} =
+               Cnpja.create_list_export(
+                 "list_1",
+                 [simples: true, simples_history: true, max_age: 45],
+                 base_url: base_url(bypass)
+               )
+    end
+
+    test "search_list_exports returns page", %{bypass: bypass} do
+      stub(bypass, "GET", "/list/list_1/export", 200, %{
+        "next" => nil,
+        "limit" => 10,
+        "count" => 1,
+        "records" => [
+          %{
+            "id" => "exp_1",
+            "created" => "2024-01-01T00:00:00.000Z",
+            "updated" => "2024-01-01T00:00:00.000Z",
+            "status" => "COMPLETED",
+            "statusReason" => nil,
+            "progress" => 100,
+            "options" => %{},
+            "links" => [
+              %{"type" => "EXCEL", "url" => "https://example.com/a.xlsx"},
+              %{"type" => "JSON_ZIP", "url" => "https://example.com/a.zip"}
+            ]
+          }
+        ]
+      })
+
+      assert {:ok, %Cnpja.CnpjListExportPage{count: 1, records: [export]}} =
+               Cnpja.search_list_exports("list_1", base_url: base_url(bypass))
+
+      assert export.status == "COMPLETED"
+      assert [%Cnpja.Link{type: "EXCEL"}, %Cnpja.Link{type: "JSON_ZIP"}] = export.links
+    end
+
+    test "get_list_export returns export", %{bypass: bypass} do
+      stub(bypass, "GET", "/list/list_1/export/exp_1", 200, %{
+        "id" => "exp_1",
+        "created" => "2024-01-01T00:00:00.000Z",
+        "updated" => "2024-01-01T00:00:00.000Z",
+        "status" => "PROCESSING",
+        "statusReason" => nil,
+        "progress" => 42,
+        "options" => %{"simples" => true},
+        "links" => []
+      })
+
+      assert {:ok, %Cnpja.CnpjListExport{id: "exp_1", status: "PROCESSING", progress: 42}} =
+               Cnpja.get_list_export("list_1", "exp_1", base_url: base_url(bypass))
     end
   end
 end

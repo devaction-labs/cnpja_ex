@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.2.0] - 2026-07-21
+
+### Breaking
+
+- `Cnpja.Company.offices` is now `[Cnpja.CompanyOffice.t()]` (API subset without address)
+- `Cnpja.Office.suframa` is now `[Cnpja.OfficeSuframa.t()]` (embedded summary, not full `Cnpja.Suframa`)
+- `Cnpja.Rfb` no longer has `registrations`, `links`, `suframa`, or `company` fields (not returned by `/rfb`)
+- `get_company/2` no longer documents or sends non-existent `:simples` / `:simples_history` query options
+
+### Added
+
+- **Lists API** (saved CNPJ collections + async export):
+  - `create_list/2`, `search_lists/1`, `get_list/2`, `update_list/3`, `delete_list/2`
+  - `create_list_export/3`, `search_list_exports/2`, `get_list_export/3`
+  - Structs: `Cnpja.CnpjList`, `Cnpja.CnpjListSummary`, `Cnpja.CnpjListPage`,
+    `Cnpja.CnpjListExport`, `Cnpja.CnpjListExportPage`, `Cnpja.CnpjListExportId`
+- `Cnpja.CompanyOffice` and `Cnpja.OfficeSuframa` response structs
+- `Cnpja.Error.code` from API error payloads
+- `search_persons/1` filter `:person_country_nin` (`country.id.nin`)
+- Client support for `POST`, `PATCH`, `DELETE` (required by Lists API)
+- Configurable `:receive_timeout` (config and per-call option; default 30s)
+- Query params that are lists are joined as comma-separated values
+
+### Fixed
+
+- `get_simples/2` now sends `history=` (API param); `:simples_history` remains as a documented alias
+- Nested company offices and office-embedded SUFRAMA parse correctly against real OpenAPI DTOs
+
+### Improved
+
+- README covers lists/export and updated dependency version
+- Expanded test coverage for lists, history param, error codes, and nested DTOs
+
 ## [0.1.3] - 2026-05-19
 
 ### Fixed

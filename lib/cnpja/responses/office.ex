@@ -42,7 +42,7 @@ defmodule Cnpja.Office do
           company: Cnpja.CompanyRef.t() | nil,
           main_activity: Cnpja.Activity.t() | nil,
           side_activities: [Cnpja.Activity.t()],
-          suframa: [Cnpja.Suframa.t()],
+          suframa: [Cnpja.OfficeSuframa.t()],
           updated: String.t() | nil
         }
 
@@ -67,7 +67,7 @@ defmodule Cnpja.Office do
       company: Cnpja.CompanyRef.from_map_nullable(map["company"]),
       main_activity: Cnpja.Activity.from_map_nullable(map["mainActivity"]),
       side_activities: Enum.map(map["sideActivities"] || [], &Cnpja.Activity.from_map/1),
-      suframa: Enum.map(map["suframa"] || [], &Cnpja.Suframa.from_map/1),
+      suframa: Enum.map(map["suframa"] || [], &Cnpja.OfficeSuframa.from_map/1),
       updated: map["updated"]
     }
   end

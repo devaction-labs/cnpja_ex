@@ -20,12 +20,8 @@ defmodule Cnpja.Rfb do
     :address,
     :phones,
     :emails,
-    :registrations,
-    :links,
-    :company,
     :main_activity,
     :side_activities,
-    :suframa,
     :updated,
     :members
   ]
@@ -48,12 +44,8 @@ defmodule Cnpja.Rfb do
           address: Cnpja.Address.t(),
           phones: [Cnpja.Phone.t()],
           emails: [Cnpja.Email.t()],
-          registrations: [Cnpja.StateRegistration.t()],
-          links: [Cnpja.Link.t()],
-          company: Cnpja.CompanyRef.t() | nil,
           main_activity: Cnpja.Activity.t() | nil,
           side_activities: [Cnpja.Activity.t()],
-          suframa: [Cnpja.Suframa.t()],
           updated: String.t() | nil,
           members: [Cnpja.Member.t()]
         }
@@ -79,12 +71,8 @@ defmodule Cnpja.Rfb do
       address: Cnpja.Address.from_map(map["address"]),
       phones: Enum.map(map["phones"] || [], &Cnpja.Phone.from_map/1),
       emails: Enum.map(map["emails"] || [], &Cnpja.Email.from_map/1),
-      registrations: Enum.map(map["registrations"] || [], &Cnpja.StateRegistration.from_map/1),
-      links: Enum.map(map["links"] || [], &Cnpja.Link.from_map/1),
-      company: Cnpja.CompanyRef.from_map_nullable(map["company"]),
       main_activity: Cnpja.Activity.from_map_nullable(map["mainActivity"]),
       side_activities: Enum.map(map["sideActivities"] || [], &Cnpja.Activity.from_map/1),
-      suframa: Enum.map(map["suframa"] || [], &Cnpja.Suframa.from_map/1),
       updated: map["updated"],
       members: Enum.map(map["members"] || [], &Cnpja.Member.from_map/1)
     }

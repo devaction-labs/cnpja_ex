@@ -1,10 +1,11 @@
 defmodule Cnpja.Error do
   @moduledoc "Error returned by the CNPJá API."
 
-  defstruct [:status, :message, :constraints, :required, :remaining, :raw]
+  defstruct [:status, :code, :message, :constraints, :required, :remaining, :raw]
 
   @type t :: %__MODULE__{
           status: integer(),
+          code: String.t() | nil,
           message: String.t(),
           constraints: [String.t()] | nil,
           required: integer() | nil,
@@ -17,6 +18,7 @@ defmodule Cnpja.Error do
   def from_response(400, body) do
     %__MODULE__{
       status: 400,
+      code: body["code"],
       message: body["message"] || "Validation error",
       constraints: body["constraints"] || [],
       raw: body
@@ -26,6 +28,7 @@ defmodule Cnpja.Error do
   def from_response(429, body) do
     %__MODULE__{
       status: 429,
+      code: body["code"],
       message: body["message"] || "Rate limit exceeded",
       required: body["required"],
       remaining: body["remaining"],
@@ -36,6 +39,7 @@ defmodule Cnpja.Error do
   def from_response(status, body) do
     %__MODULE__{
       status: status,
+      code: body["code"],
       message: body["message"] || "HTTP #{status}",
       raw: body
     }

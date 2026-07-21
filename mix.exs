@@ -1,7 +1,7 @@
 defmodule Cnpja.MixProject do
   use Mix.Project
 
-  @version "0.1.3"
+  @version "0.2.0"
   @source_url "https://github.com/devaction-labs/cnpja_ex"
 
   def project do
@@ -14,7 +14,7 @@ defmodule Cnpja.MixProject do
       deps: deps(),
       aliases: aliases(),
       description:
-        "Elixir SDK for the CNPJá API — CNPJ, CEP, RFB, Simples Nacional, CCC and SUFRAMA lookups.",
+        "Elixir SDK for the CNPJá API — CNPJ, CEP, RFB, Simples Nacional, CCC, SUFRAMA and bulk list export.",
       package: package(),
       name: "Cnpja",
       source_url: @source_url,
@@ -83,14 +83,22 @@ defmodule Cnpja.MixProject do
           Cnpja.Zip,
           Cnpja.Company,
           Cnpja.CompanyRef,
+          Cnpja.CompanyOffice,
           Cnpja.Office,
           Cnpja.OfficeSearch,
+          Cnpja.OfficeSuframa,
           Cnpja.Person,
           Cnpja.PersonSearch,
           Cnpja.Rfb,
           Cnpja.Simples,
           Cnpja.Ccc,
-          Cnpja.Suframa
+          Cnpja.Suframa,
+          Cnpja.CnpjList,
+          Cnpja.CnpjListSummary,
+          Cnpja.CnpjListPage,
+          Cnpja.CnpjListExport,
+          Cnpja.CnpjListExportPage,
+          Cnpja.CnpjListExportId
         ],
         Shared: [
           Cnpja.Label,
