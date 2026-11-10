@@ -90,6 +90,7 @@ defmodule Cnpja do
     has_phone: "phones.ex",
     phone_type_in: "phones.type.in",
     phone_area_in: "phones.area.in",
+    phone_area_nin: "phones.area.nin",
     phone_area_gte: "phones.area.gte",
     phone_area_lte: "phones.area.lte",
     phone_number_in: "phones.number.in",
@@ -269,6 +270,20 @@ defmodule Cnpja do
   - `:activity_in` / `:activity_nin` — CNAE codes across main and side activities
   - `:has_phone` — `true`/`false` for phone presence
   - `:has_email` — `true`/`false` for e-mail presence
+  - `:phone_type_in` — phone types (e.g. `LANDLINE`, `MOBILE`)
+  - `:phone_area_in` / `:phone_area_nin` — include/exclude phone area codes (DDD)
+  - `:phone_area_gte` / `:phone_area_lte` — phone area code range
+  - `:phone_number_in` / `:phone_number_nin` — include/exclude phone numbers
+  - `:email_ownership_in` — e-mail ownership types
+  - `:email_address_in` / `:email_address_nin` — include/exclude e-mail addresses
+  - `:email_domain_in` / `:email_domain_nin` — include/exclude e-mail domains
+  - `:number_in` / `:number_nin` — include/exclude street numbers
+  - `:details_in` / `:details_nin` — include/exclude address details (complement) terms
+  - `:simples_since_gte` / `:simples_since_lte` — Simples Nacional enrollment date range
+  - `:simei_since_gte` / `:simei_since_lte` — MEI enrollment date range
+  - `:tax_id_nin` — exclude CNPJs
+  - `:main_activity_nin` — exclude main activity CNAE codes
+  - `:side_activity_nin` — exclude side activity CNAE codes
 
   Lists of values are joined as comma-separated strings.
   """

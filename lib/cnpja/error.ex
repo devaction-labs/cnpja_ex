@@ -5,7 +5,7 @@ defmodule Cnpja.Error do
 
   @type t :: %__MODULE__{
           status: integer(),
-          code: String.t() | nil,
+          code: integer() | nil,
           message: String.t(),
           constraints: [String.t()] | nil,
           required: integer() | nil,

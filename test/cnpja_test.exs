@@ -296,7 +296,7 @@ defmodule CnpjaTest do
 
     test "returns error 400 with constraints and code", %{bypass: bypass} do
       stub(bypass, "GET", "/office/00000000000000", 400, %{
-        "code" => "bad_request",
+        "code" => 400,
         "message" => "Validation failed",
         "constraints" => ["taxId must be a valid CNPJ"]
       })
@@ -304,7 +304,7 @@ defmodule CnpjaTest do
       assert {:error,
               %Cnpja.Error{
                 status: 400,
-                code: "bad_request",
+                code: 400,
                 constraints: ["taxId must be a valid CNPJ"]
               }} =
                Cnpja.get_office("00000000000000", base_url: base_url(bypass))
@@ -425,6 +425,23 @@ defmodule CnpjaTest do
         simples_optant: true,
         base_url: base_url(bypass)
       )
+    end
+  end
+
+  describe "search_offices/1 phone filters" do
+    test "sends phone_area_nin as phones.area.nin", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/office", fn conn ->
+        assert Plug.Conn.fetch_query_params(conn).query_params["phones.area.nin"] == "11,13"
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(
+          200,
+          Jason.encode!(%{"count" => 0, "limit" => 10, "next" => nil, "records" => []})
+        )
+      end)
+
+      Cnpja.search_offices(phone_area_nin: ["11", "13"], base_url: base_url(bypass))
     end
   end
 
@@ -615,6 +632,34 @@ defmodule CnpjaTest do
       assert simples.tax_id == "37335118000180"
       assert %Cnpja.SimplesOpt{optant: true, since: "2015-01-01"} = simples.simples
       assert [%Cnpja.SimplesHistory{from: "2015-01-01"}] = simples.simples.history
+    end
+
+    test "parses simples events and defaults to empty list", %{bypass: bypass} do
+      stub(bypass, "GET", "/simples", 200, %{
+        "taxId" => "37335118000180",
+        "updated" => "2024-01-01T00:00:00.000Z",
+        "simples" => %{
+          "optant" => true,
+          "since" => "2015-01-01",
+          "events" => [
+            %{"regime" => "IBS", "from" => "2027-01-01", "text" => "Opção pelo Regime Regular"}
+          ]
+        },
+        "simei" => %{"optant" => false}
+      })
+
+      {:ok, simples} = Cnpja.get_simples("37335118000180", base_url: base_url(bypass))
+
+      assert [
+               %Cnpja.SimplesEvent{
+                 regime: "IBS",
+                 from: "2027-01-01",
+                 text: "Opção pelo Regime Regular"
+               }
+             ] =
+               simples.simples.events
+
+      assert simples.simei.events == []
     end
 
     test "sends history query param", %{bypass: bypass} do

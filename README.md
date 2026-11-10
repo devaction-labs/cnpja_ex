@@ -13,7 +13,7 @@ Add `cnpja_ex` to your dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:cnpja_ex, "~> 0.2.0"}
+    {:cnpja_ex, "~> 0.2.1"}
   ]
 end
 ```

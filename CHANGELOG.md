@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.1] - 2026-11-10
+
+### Added
+
+- `Cnpja.SimplesEvent` struct and `Cnpja.SimplesOpt.events` (upcoming IBS/CBS regular-regime events)
+- `:phone_area_nin` filter for `search_offices/1`; documented the remaining phone, e-mail, address, since and exclusion filters
+
+### Changed
+
+- Dependencies updated (req 0.7.5, finch 0.24, mint 1.11)
+
+### Fixed
+
+- Typespecs of `Cnpja.Error.code` (`integer() | nil`) and `Cnpja.PersonMembershipCompany.id` (`String.t()`)
+
 ## [0.2.0] - 2026-07-21
 
 ### Breaking

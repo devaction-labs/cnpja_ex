@@ -1,7 +1,7 @@
 defmodule Cnpja.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.2.1"
   @source_url "https://github.com/devaction-labs/cnpja_ex"
 
   def project do
@@ -116,6 +116,7 @@ defmodule Cnpja.MixProject do
           Cnpja.StateRegistration,
           Cnpja.SimplesOpt,
           Cnpja.SimplesHistory,
+          Cnpja.SimplesEvent,
           Cnpja.Link,
           Cnpja.SuframaIncentive
         ],

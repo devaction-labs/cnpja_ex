@@ -2,12 +2,13 @@ defmodule Cnpja.SimplesOpt do
   @moduledoc "Simples Nacional enrollment or MEI classification data."
 
   @enforce_keys [:optant]
-  defstruct [:optant, :since, :history]
+  defstruct [:optant, :since, :history, :events]
 
   @type t :: %__MODULE__{
           optant: boolean(),
           since: String.t() | nil,
-          history: [Cnpja.SimplesHistory.t()]
+          history: [Cnpja.SimplesHistory.t()],
+          events: [Cnpja.SimplesEvent.t()]
         }
 
   @spec from_map(map()) :: t()
@@ -15,7 +16,8 @@ defmodule Cnpja.SimplesOpt do
     %__MODULE__{
       optant: map["optant"],
       since: map["since"],
-      history: Enum.map(map["history"] || [], &Cnpja.SimplesHistory.from_map/1)
+      history: Enum.map(map["history"] || [], &Cnpja.SimplesHistory.from_map/1),
+      events: Enum.map(map["events"] || [], &Cnpja.SimplesEvent.from_map/1)
     }
   end
 
